@@ -250,12 +250,15 @@ export const LuckSnakeApp: React.FC = () => {
         {/* 幸运数字卡片 */}
         <div className="lucky-numbers-card">
           <h3>🎲 您的幸运数字</h3>
+          <p className="hint-text">（按获取时间倒序，最新的在前）</p>
           {userAccount ? (
             <div className="numbers-grid">
               {userAccount.numbers.length > 0 ? (
-                userAccount.numbers.map((number, index) => (
-                  <div key={index} className="number-badge">
-                    {number}
+                // 倒序显示数字，最新的在前
+                [...userAccount.numbers].reverse().map((number, index) => (
+                  <div key={`${number}-${userAccount.numbers.length - 1 - index}`} className="number-badge">
+                    <span className="number-value">{number}</span>
+                    <span className="number-index">#{userAccount.numbers.length - index}</span>
                   </div>
                 ))
               ) : (

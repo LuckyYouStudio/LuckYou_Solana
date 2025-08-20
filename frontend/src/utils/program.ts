@@ -134,15 +134,56 @@ export const createProgramOperations = (
       try {
         // 计算用户账户PDA
         const [userAccountPDA] = getUserAccountPDA(wallet.publicKey);
-        const userAccount = await (program.account as any)['userAccount'].fetch(userAccountPDA);
+        
+        // 直接获取账户信息，因为我们使用了AccountInfo
+        const connection = program.provider.connection;
+        const accountInfo = await connection.getAccountInfo(userAccountPDA);
+        
+        if (!accountInfo || accountInfo.data.length < 53) {
+          console.log('用户账户不存在或数据不完整');
+          return null;
+        }
+        
+        // 手动解析账户数据
+        const data = accountInfo.data;
+        
+        // 跳过discriminator (8字节)
+        let offset = 8;
+        
+        // 读取用户公钥 (32字节)
+        const userPubkeyBytes = data.slice(offset, offset + 32);
+        offset += 32;
+        
+        // 读取数字数量 (4字节)
+        const numbersCount = data.readUInt32LE(offset);
+        offset += 4;
+        
+        // 读取数字列表
+        const numbers: number[] = [];
+        for (let i = 0; i < numbersCount; i++) {
+          if (offset + 4 <= data.length) {
+            numbers.push(data.readUInt32LE(offset));
+            offset += 4;
+          }
+        }
+        
+        // 读取nonce (8字节)
+        const nonce = data.length >= offset + 8 ? data.readBigUInt64LE(offset) : BigInt(0);
+        offset += 8;
+        
+        // 读取bump (1字节)
+        const bump = data.length > offset ? data.readUInt8(offset) : 0;
+        
+        console.log(`✅ 解析用户账户: ${numbers.length} 个数字, nonce: ${nonce}`);
+        
         return {
-          user: userAccount.user,
-          numbers: userAccount.numbers.map((n: any) => typeof n === 'number' ? n : n.toNumber()),
-          nonce: typeof userAccount.nonce === 'number' ? userAccount.nonce : userAccount.nonce.toNumber(),
-          bump: userAccount.bump,
+          user: new PublicKey(userPubkeyBytes),
+          numbers: numbers,
+          nonce: Number(nonce),
+          bump: bump,
         };
       } catch (error) {
-        console.log('用户账户不存在或获取失败:', error);
+        console.log('用户账户获取失败:', error);
         return null;
       }
     },
