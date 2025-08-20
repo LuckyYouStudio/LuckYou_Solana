@@ -11,7 +11,7 @@ pub struct WithdrawFunds<'info> {
     /// 验证管理员和财库地址
     #[account(
         seeds = [LuckSnakeConfig::SEED],        // 使用PDA种子验证
-        bump = config.bump,                     // 验证bump值
+        bump,                                    // 验证bump值
         has_one = authority,                    // 验证管理员地址匹配
         has_one = treasury                      // 验证财库地址匹配
     )]
@@ -26,7 +26,7 @@ pub struct WithdrawFunds<'info> {
     /// 财库账户
     /// 存储所有用户支付的费用
     /// 资金将从这里转出
-    #[account(mut)]
+    #[account(mut, signer)]
     pub treasury: SystemAccount<'info>,
     
     /// 接收方账户
@@ -51,11 +51,20 @@ pub fn handler(ctx: Context<WithdrawFunds>) -> Result<()> {
         LuckSnakeError::NoFundsToWithdraw
     );
     
-    // 执行资金转移
-    // 从财库账户扣除所有余额
-    **ctx.accounts.treasury.try_borrow_mut_lamports()? -= treasury_balance;
-    // 将余额添加到接收方账户
-    **ctx.accounts.recipient.try_borrow_mut_lamports()? += treasury_balance;
+    // 创建转账指令，从财库转账到接收方
+    let transfer_instruction = system_program::Transfer {
+        from: ctx.accounts.treasury.to_account_info(),
+        to: ctx.accounts.recipient.to_account_info(),
+    };
+    
+    // 创建CPI上下文
+    let transfer_context = CpiContext::new(
+        ctx.accounts.system_program.to_account_info(),
+        transfer_instruction,
+    );
+    
+    // 执行转账
+    system_program::transfer(transfer_context, treasury_balance)?;
     
     // 记录提取日志
     msg!(

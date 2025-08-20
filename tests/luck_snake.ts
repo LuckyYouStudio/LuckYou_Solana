@@ -50,10 +50,10 @@ describe("luck_snake", () => {
     // 创建一个新用户
     const user = anchor.web3.Keypair.generate();
     
-    // 给用户账户充值2 SOL用于测试
+    // 给用户账户充值20 SOL用于测试（包含动态账户增长的租金）
     await provider.connection.requestAirdrop(
       user.publicKey,
-      2 * LAMPORTS_PER_SOL
+      20 * LAMPORTS_PER_SOL
     );
     
     // 等待充值确认
@@ -102,7 +102,7 @@ describe("luck_snake", () => {
     // 充值
     await provider.connection.requestAirdrop(
       user.publicKey,
-      2 * LAMPORTS_PER_SOL
+      20 * LAMPORTS_PER_SOL
     );
     
     await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -141,6 +141,13 @@ describe("luck_snake", () => {
 
   // 测试：提取资金
   it("提取资金", async () => {
+    // 先给财库充值一些资金
+    await provider.connection.requestAirdrop(
+      treasury.publicKey,
+      1 * LAMPORTS_PER_SOL
+    );
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    
     // 创建接收方账户
     const recipient = anchor.web3.Keypair.generate();
     
@@ -157,6 +164,7 @@ describe("luck_snake", () => {
         recipient: recipient.publicKey,         // 接收方账户
         systemProgram: SystemProgram.programId, // 系统程序
       })
+      .signers([treasury])  // 财库需要签名
       .rpc();
 
     // 验证接收方收到资金
@@ -185,14 +193,14 @@ describe("luck_snake", () => {
           recipient: recipient.publicKey,
           systemProgram: SystemProgram.programId,
         })
-        .signers([nonAuthority])
+        .signers([nonAuthority, treasury])  // 财库也需要签名
         .rpc();
       
       // 如果没有抛出错误，测试失败
       expect.fail("应该抛出错误");
     } catch (error) {
-      // 验证错误信息包含has_one约束失败
-      expect(error.toString()).to.include("has_one");
+      // 验证错误信息包含约束失败（can use "constraint" or check for specific error codes）
+      expect(error.toString()).to.include("ConstraintHasOne");
     }
   });
 });

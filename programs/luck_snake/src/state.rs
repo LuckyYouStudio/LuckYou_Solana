@@ -69,9 +69,26 @@ pub struct UserAccount {
 }
 
 impl UserAccount {
-    /// 账户大小：8字节判别器 + 32字节用户 + 4字节向量长度 + (1000 * 4)字节数字数组 + 8字节nonce + 1字节bump
-    /// 预分配空间以存储最多1000个数字
-    pub const LEN: usize = 8 + 32 + 4 + (1000 * 4) + 8 + 1;
+    /// 基础账户大小：8字节判别器 + 32字节用户 + 4字节向量长度 + 8字节nonce + 1字节bump
+    /// 初始不包含任何数字，每个数字需要额外4字节
+    pub const BASE_LEN: usize = 8 + 32 + 4 + 8 + 1;
+    /// 每个数字占用的空间
+    pub const NUMBER_SIZE: usize = 4;
     /// PDA种子前缀
     pub const SEED: &'static [u8] = b"user";
+    
+    /// 根据数字数量计算所需的账户大小
+    pub fn space_for_numbers(count: usize) -> usize {
+        Self::BASE_LEN + (count * Self::NUMBER_SIZE)
+    }
+    
+    /// 计算当前账户大小
+    pub fn current_space(&self) -> usize {
+        Self::space_for_numbers(self.numbers.len())
+    }
+    
+    /// 计算添加一个数字后的账户大小
+    pub fn space_after_adding_number(&self) -> usize {
+        Self::space_for_numbers(self.numbers.len() + 1)
+    }
 }

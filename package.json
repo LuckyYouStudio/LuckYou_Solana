@@ -2,13 +2,15 @@
   "name": "luck_snake",
   "version": "1.0.0",
   "description": "Random number generation system on Solana",
+  "type": "module",
   "scripts": {
     "lint:fix": "prettier */*.js \"*/**/*{.js,.ts}\" -w",
     "lint": "prettier */*.js \"*/**/*{.js,.ts}\" --check",
     "test": "anchor test"
   },
   "dependencies": {
-    "@coral-xyz/anchor": "^0.29.0"
+    "@coral-xyz/anchor": "^0.31.1",
+    "@solana/web3.js": "^1.87.6"
   },
   "devDependencies": {
     "@types/bn.js": "^5.1.0",

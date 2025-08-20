@@ -1,9 +1,12 @@
+[toolchain]
+anchor_version = "0.31.1"
+
 [features]
-seeds = false
+resolution = true
 skip-lint = false
 
 [programs.localnet]
-luck_snake = "H3nY6p687WVyxTtjumFaFFm8qqnLL6LGR72TBCHDLaL3"
+luck_snake = "F4gich1NV3oAT7UFbqQP5ERr8Sk7zUqebsbmsHffiBp1"
 
 [registry]
 url = "https://api.apr.dev"
@@ -14,3 +17,13 @@ wallet = "~/.config/solana/id.json"
 
 [scripts]
 test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
+
+[test]
+startup_wait = 5000
+shutdown_wait = 2000
+upgradeable = false
+
+[workspace]
+members = [
+    "programs/*"
+]

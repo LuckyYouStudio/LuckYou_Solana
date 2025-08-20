@@ -9,7 +9,7 @@ use instructions::*;
 
 // 程序ID - 这是部署后程序的唯一标识符
 // 在实际部署时需要更新为真实的程序ID
-declare_id!("H3nY6p687WVyxTtjumFaFFm8qqnLL6LGR72TBCHDLaL3");
+declare_id!("F4gich1NV3oAT7UFbqQP5ERr8Sk7zUqebsbmsHffiBp1");
 
 /// LuckSnake主程序
 /// 实现了一个随机数字生成系统，用户支付费用后可以获得0-999范围内的唯一随机数
